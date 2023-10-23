@@ -32799,7 +32799,7 @@ const tryFetch = async (method, url, body) => {
     }
     return text;
   } catch (e) {
-    throw new Error('Failed to fetch:', e.message);
+    throw e;
   }
 };
 
