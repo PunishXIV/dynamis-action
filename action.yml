@@ -1,0 +1,32 @@
+name: "Publish to Dynamis"
+description: "Publish a new version of a plugin to Dynamis"
+
+inputs:
+    plugin_id:
+        description: "The plugin ID in Dynamis"
+        required: true
+    internal_name:
+        description: "The internal name of the plugin in Dynamis"
+        required: true
+    version_number:
+        description: "The version number, e.g. `1.2.3.4`"
+        required: true
+    path:
+        description: "The path to the plugin zip file"
+        required: true
+    type:
+        description: "The type of version; `latest` or `testing`"
+        default: "testing"
+    game_version:
+        description: "The game version"
+        default: "any"
+    dalamud_version:
+        description: "The Dalamud version"
+        default: "9"
+    changelog:
+        description: "The changelog for the version"
+        default: ""
+
+runs:
+    using: "node20"
+    main: "dist/index.js"
