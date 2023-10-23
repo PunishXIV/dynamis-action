@@ -101,4 +101,7 @@ const run = async () => {
   console.log('Published new version with ID ', versionId);
 };
 
-run().catch((err) => setFailed(err.message));
+run().catch((err) => {
+  console.error(err);
+  setFailed(err.message);
+});

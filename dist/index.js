@@ -32866,7 +32866,10 @@ const run = async () => {
   console.log('Published new version with ID ', versionId);
 };
 
-run().catch((err) => (0,core.setFailed)(err.message));
+run().catch((err) => {
+  console.error(err);
+  (0,core.setFailed)(err.message);
+});
 
 })();
 
