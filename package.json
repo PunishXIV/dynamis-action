@@ -1,6 +1,6 @@
 {
     "name": "dynamis-action",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Publish a new version of a plugin to Dynamis",
     "main": "dist/index.js",
     "scripts": {

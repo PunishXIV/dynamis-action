@@ -32799,7 +32799,7 @@ const tryFetch = async (method, url, body) => {
     }
     return text;
   } catch (e) {
-    throw ('Failed to fetch:', e.message);
+    throw new Error('Failed to fetch:', e.message);
   }
 };
 
@@ -32825,7 +32825,7 @@ const tryReadFileInfo = async (path) => {
   try {
     return await (0,promises_namespaceObject.stat)(path);
   } catch (e) {
-    throw ('Failed to read file info:', e.message);
+    throw new Error('Failed to read file info:', e.message);
   }
 };
 
@@ -32833,7 +32833,7 @@ const tryReadFileData = async (path) => {
   try {
     return await (0,promises_namespaceObject.readFile)(path);
   } catch (e) {
-    throw ('Failed to read file data:', e.message);
+    throw new Error('Failed to read file data:', e.message);
   }
 };
 
