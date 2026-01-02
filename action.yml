@@ -8,24 +8,24 @@ inputs:
     internal_name:
         description: "The internal name of the plugin in Dynamis"
         required: true
-    version_number:
-        description: "The version number, e.g. `1.2.3.4`"
-        required: true
     path:
         description: "The path to the plugin zip file"
         required: true
     type:
         description: "The type of version; `latest` or `testing`"
         default: "testing"
+    version_number:
+        description: "Override version number (optional - parsed from manifest if not provided)"
+        required: false
     game_version:
-        description: "The game version"
-        default: "any"
+        description: "Override game version (optional - parsed from manifest if not provided)"
+        required: false
     dalamud_version:
-        description: "The Dalamud version"
-        default: "9"
+        description: "Override Dalamud API level (optional - parsed from manifest if not provided)"
+        required: false
     changelog:
-        description: "The changelog for the version"
-        default: ""
+        description: "Override changelog (optional - parsed from manifest if not provided)"
+        required: false
 
 runs:
     using: "node20"
