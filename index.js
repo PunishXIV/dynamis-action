@@ -9,6 +9,11 @@ const getInputs = () => {
     internalName: getInput('internal_name'),
     path: getInput('path'),
     type: getInput('type') || 'testing',
+    // Optional manual overrides (for backward compatibility)
+    versionNumber: getInput('version_number') || null,
+    gameVersion: getInput('game_version') || null,
+    dalamudVersion: getInput('dalamud_version') || null,
+    changelog: getInput('changelog') || null,
   };
 
   if (!inputs.pluginId) throw new Error('Missing plugin ID');
@@ -34,7 +39,7 @@ const parseManifest = async (fileData, internalName) => {
   return {
     versionNumber: parsed.AssemblyVersion,
     gameVersion: parsed.ApplicableVersion || 'any',
-    dalamudVersion: parsed.DalamudApiLevel || '9',
+    dalamudVersion: String(parsed.DalamudApiLevel || '9'),
     changelog: parsed.Changelog || '',
   };
 };
@@ -93,11 +98,37 @@ const run = async () => {
   const fileInfo = await tryReadFileInfo(inputs.path);
   const fileData = await tryReadFileData(inputs.path);
 
-  console.log('Parsing manifest from zip');
-  const manifest = await parseManifest(fileData, inputs.internalName);
-  console.log(`Found version: ${manifest.versionNumber}`);
+  let versionNumber, gameVersion, dalamudVersion, changelog;
 
-  const apiUrl = `https://puni.sh/api/plugins/download/${inputs.pluginId}/${inputs.internalName}/versions/${inputs.type}?versionNum=${manifest.versionNumber}&publisherKey=${process.env.PUBLISHER_KEY}`;
+  if (inputs.versionNumber) {
+    // Manual version provided - use manual inputs with defaults, skip manifest parsing
+    console.log('Using manual inputs (manifest parsing skipped)');
+    versionNumber = inputs.versionNumber;
+    gameVersion = inputs.gameVersion || 'any';
+    dalamudVersion = inputs.dalamudVersion || '9';
+    changelog = inputs.changelog || '';
+  } else {
+    // No manual version - parse manifest
+    console.log('Parsing manifest from zip');
+    const manifest = await parseManifest(fileData, inputs.internalName);
+    console.log('Manifest parsed successfully');
+
+    versionNumber = manifest.versionNumber;
+    gameVersion = inputs.gameVersion || manifest.gameVersion;
+    dalamudVersion = inputs.dalamudVersion || manifest.dalamudVersion;
+    changelog = inputs.changelog !== null ? inputs.changelog : manifest.changelog;
+  }
+
+  if (!versionNumber) {
+    throw new Error('Version number not found in manifest and not provided manually');
+  }
+
+  console.log(`Version: ${versionNumber} (${inputs.versionNumber ? 'manual' : 'from manifest'})`);
+  console.log(`Game version: ${gameVersion} (${inputs.gameVersion ? 'manual' : 'from manifest'})`);
+  console.log(`Dalamud version: ${dalamudVersion} (${inputs.dalamudVersion ? 'manual' : 'from manifest'})`);
+  console.log(`Changelog: ${changelog ? 'provided' : 'empty'} (${inputs.changelog !== null ? 'manual' : 'from manifest'})`);
+
+  const apiUrl = `https://puni.sh/api/plugins/download/${inputs.pluginId}/${inputs.internalName}/versions/${inputs.type}?versionNum=${versionNumber}&publisherKey=${process.env.PUBLISHER_KEY}`;
 
   console.log('Trying to fetch presigned URL');
   const presignedUrl = await tryFetch('PUT', apiUrl);
@@ -112,9 +143,9 @@ const run = async () => {
     'POST',
     apiUrl,
     JSON.stringify({
-      gameVersion: manifest.gameVersion,
-      dalamudVersion: manifest.dalamudVersion,
-      changelog: manifest.changelog,
+      gameVersion,
+      dalamudVersion,
+      changelog,
     }),
   );
   console.log('Published new version with ID ', versionId);

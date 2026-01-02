@@ -14,6 +14,18 @@ inputs:
     type:
         description: "The type of version; `latest` or `testing`"
         default: "testing"
+    version_number:
+        description: "Override version number (optional - parsed from manifest if not provided)"
+        required: false
+    game_version:
+        description: "Override game version (optional - parsed from manifest if not provided)"
+        required: false
+    dalamud_version:
+        description: "Override Dalamud API level (optional - parsed from manifest if not provided)"
+        required: false
+    changelog:
+        description: "Override changelog (optional - parsed from manifest if not provided)"
+        required: false
 
 runs:
     using: "node20"

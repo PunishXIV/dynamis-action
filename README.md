@@ -2,7 +2,7 @@
 
 Publish a new version of a Dalamud plugin to Dynamis.
 
-This action parses the plugin manifest JSON from your ZIP file automatically, extracting version number, game version, Dalamud API level, and changelog - just like the Dynamis web upload.
+This action automatically parses the plugin manifest JSON from your ZIP file, extracting version number, game version, Dalamud API level, and changelog - just like the Dynamis web upload. You can also manually override any of these values.
 
 ## Inputs
 
@@ -12,6 +12,10 @@ This action parses the plugin manifest JSON from your ZIP file automatically, ex
 | `internal_name` | Yes | | The internal name of your plugin (matches `{name}.json` in the ZIP) |
 | `path` | Yes | | Path to the plugin ZIP file |
 | `type` | No | `testing` | Release type: `testing` or `latest` |
+| `version_number` | No | *from manifest* | Override version number |
+| `game_version` | No | *from manifest* | Override game version |
+| `dalamud_version` | No | *from manifest* | Override Dalamud API level |
+| `changelog` | No | *from manifest* | Override changelog |
 
 ## Environment Variables
 
@@ -28,13 +32,47 @@ The action reads your plugin ZIP and extracts metadata from `{internal_name}.jso
 - `DalamudApiLevel` → Dalamud version (defaults to `9`)
 - `Changelog` → Changelog text (defaults to empty)
 
-## Example Workflow
+If you provide manual inputs, they take priority over the manifest values.
+
+## Example Workflows
+
+### Simple (auto-parse from manifest)
+
+```yaml
+- name: Publish to Dynamis
+  uses: PunishXIV/dynamis-action@v1
+  with:
+    plugin_id: "123"
+    internal_name: "YourPlugin"
+    path: "YourPlugin/bin/Release/YourPlugin.zip"
+    type: "testing"
+  env:
+    PUBLISHER_KEY: ${{ secrets.PUBLISHER_KEY }}
+```
+
+### With manual overrides
+
+```yaml
+- name: Publish to Dynamis
+  uses: PunishXIV/dynamis-action@v1
+  with:
+    plugin_id: "123"
+    internal_name: "YourPlugin"
+    path: "YourPlugin/bin/Release/YourPlugin.zip"
+    type: "testing"
+    version_number: ${{ github.ref_name }}
+    changelog: ${{ github.event.release.body }}
+  env:
+    PUBLISHER_KEY: ${{ secrets.PUBLISHER_KEY }}
+```
+
+### Full workflow example
 
 ```yaml
 name: Publish to Dynamis
 
 on:
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:
 
 permissions:
   actions: write
@@ -101,6 +139,10 @@ jobs:
 
 - `testing` - Publishes to the testing channel (safe for testing)
 - `latest` - Publishes to production (users will receive this version)
+
+## Backward Compatibility
+
+Existing workflows that manually specify `version_number`, `game_version`, `dalamud_version`, and `changelog` will continue to work. Manual values take priority over parsed manifest values.
 
 ## Troubleshooting
 
