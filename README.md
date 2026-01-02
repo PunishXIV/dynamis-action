@@ -40,7 +40,7 @@ If you provide manual inputs, they take priority over the manifest values.
 
 ```yaml
 - name: Publish to Dynamis
-  uses: PunishXIV/dynamis-action@v1
+  uses: PunishXIV/dynamis-action@v2
   with:
     plugin_id: "123"
     internal_name: "YourPlugin"
@@ -54,7 +54,7 @@ If you provide manual inputs, they take priority over the manifest values.
 
 ```yaml
 - name: Publish to Dynamis
-  uses: PunishXIV/dynamis-action@v1
+  uses: PunishXIV/dynamis-action@v2
   with:
     plugin_id: "123"
     internal_name: "YourPlugin"
@@ -110,7 +110,7 @@ jobs:
           zip YourPlugin.zip YourPlugin.json YourPlugin.dll
 
       - name: Publish to Dynamis
-        uses: PunishXIV/dynamis-action@v1
+        uses: PunishXIV/dynamis-action@v2
         with:
           plugin_id: "123"
           internal_name: "YourPlugin"
