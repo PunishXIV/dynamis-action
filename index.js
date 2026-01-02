@@ -25,6 +25,15 @@ const getInputs = () => {
   return inputs;
 };
 
+/**
+ * Dalamud plugin manifest structure
+ * @typedef {Object} DalamudManifest
+ * @property {string} AssemblyVersion - Plugin version (e.g. "1.0.0.0")
+ * @property {string} [ApplicableVersion] - Game version (e.g. "any")
+ * @property {number|string} [DalamudApiLevel] - Dalamud API level (e.g. 14)
+ * @property {string} [Changelog] - Changelog text
+ */
+
 const parseManifest = async (fileData, internalName) => {
   const zip = await JSZip.loadAsync(fileData);
   const manifestFile = zip.files[`${internalName}.json`];
@@ -34,6 +43,7 @@ const parseManifest = async (fileData, internalName) => {
   }
 
   const manifestData = await manifestFile.async('string');
+  /** @type {DalamudManifest} */
   const parsed = JSON.parse(manifestData);
 
   return {
