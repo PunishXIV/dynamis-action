@@ -1,27 +1,42 @@
 import { getInput, setFailed } from '@actions/core';
 import { readFile, stat } from 'fs/promises';
 import axios from 'axios';
+import JSZip from 'jszip';
 
 const getInputs = () => {
   const inputs = {
     pluginId: getInput('plugin_id'),
     internalName: getInput('internal_name'),
-    versionNumber: getInput('version_number'),
     path: getInput('path'),
     type: getInput('type') || 'testing',
-    gameVersion: getInput('game_version') || 'any',
-    dalamudVersion: getInput('dalamud_version') || '9',
-    changelog: getInput('changelog') || '',
   };
 
   if (!inputs.pluginId) throw new Error('Missing plugin ID');
   if (!inputs.internalName) throw new Error('Missing internal name');
-  if (!inputs.versionNumber) throw new Error('Missing version number');
   if (!inputs.path) throw new Error('Missing path');
 
   if (!process.env.PUBLISHER_KEY) throw new Error('Missing publisher key');
 
   return inputs;
+};
+
+const parseManifest = async (fileData, internalName) => {
+  const zip = await JSZip.loadAsync(fileData);
+  const manifestFile = zip.files[`${internalName}.json`];
+
+  if (!manifestFile) {
+    throw new Error(`Manifest file "${internalName}.json" not found in zip`);
+  }
+
+  const manifestData = await manifestFile.async('string');
+  const parsed = JSON.parse(manifestData);
+
+  return {
+    versionNumber: parsed.AssemblyVersion,
+    gameVersion: parsed.ApplicableVersion || 'any',
+    dalamudVersion: parsed.DalamudApiLevel || '9',
+    changelog: parsed.Changelog || '',
+  };
 };
 
 const tryFetch = async (method, url, body) => {
@@ -75,14 +90,18 @@ const tryReadFileData = async (path) => {
 const run = async () => {
   const inputs = getInputs();
 
-  const apiUrl = `https://puni.sh/api/plugins/download/${inputs.pluginId}/${inputs.internalName}/versions/${inputs.type}?versionNum=${inputs.versionNumber}&publisherKey=${process.env.PUBLISHER_KEY}`;
+  const fileInfo = await tryReadFileInfo(inputs.path);
+  const fileData = await tryReadFileData(inputs.path);
+
+  console.log('Parsing manifest from zip');
+  const manifest = await parseManifest(fileData, inputs.internalName);
+  console.log(`Found version: ${manifest.versionNumber}`);
+
+  const apiUrl = `https://puni.sh/api/plugins/download/${inputs.pluginId}/${inputs.internalName}/versions/${inputs.type}?versionNum=${manifest.versionNumber}&publisherKey=${process.env.PUBLISHER_KEY}`;
 
   console.log('Trying to fetch presigned URL');
   const presignedUrl = await tryFetch('PUT', apiUrl);
   console.log('Got presigned URL');
-
-  const fileInfo = await tryReadFileInfo(inputs.path);
-  const fileData = await tryReadFileData(inputs.path);
 
   console.log('Trying to upload file to presigned URL');
   await tryUploadFile(presignedUrl, fileData, fileInfo.size);
@@ -93,9 +112,9 @@ const run = async () => {
     'POST',
     apiUrl,
     JSON.stringify({
-      gameVersion: inputs.gameVersion,
-      dalamudVersion: inputs.dalamudVersion,
-      changelog: inputs.changelog,
+      gameVersion: manifest.gameVersion,
+      dalamudVersion: manifest.dalamudVersion,
+      changelog: manifest.changelog,
     }),
   );
   console.log('Published new version with ID ', versionId);
