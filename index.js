@@ -44,6 +44,7 @@ const parseManifest = async (fileData, internalName) => {
     manifestPunchline: parsed.Punchline || '',
     manifestDescription: parsed.Description || '',
     manifestDisplayName: parsed.Name || '',
+    manifestTags: parsed.Tags || [],
   };
 };
 
@@ -99,7 +100,7 @@ const run = async () => {
   const fileData = await tryReadFileData(inputs.path);
 
   let versionNumber, gameVersion, dalamudVersion, changelog;
-  let manifestPunchline, manifestDescription, manifestDisplayName;
+  let manifestPunchline, manifestDescription, manifestDisplayName, manifestTags;
 
   if (inputs.versionNumber) {
     // Manual version provided - use manual inputs with defaults, skip manifest parsing
@@ -111,6 +112,7 @@ const run = async () => {
     manifestPunchline = manifest.manifestPunchline;
     manifestDescription = manifest.manifestDescription;
     manifestDisplayName = manifest.manifestDisplayName;
+    manifestTags = manifest.manifestTags;
   } else {
     // No manual version - parse manifest
     console.log('Parsing manifest from zip');
@@ -124,6 +126,7 @@ const run = async () => {
     manifestPunchline = manifest.manifestPunchline;
     manifestDescription = manifest.manifestDescription;
     manifestDisplayName = manifest.manifestDisplayName;
+    manifestTags = manifest.manifestTags;
   }
 
   if (!versionNumber) {
@@ -160,6 +163,7 @@ const run = async () => {
       manifestPunchline,
       manifestDescription,
       manifestDisplayName,
+      manifestTags,
     }),
   );
   console.log('Published new version with ID ', versionId);
