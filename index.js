@@ -41,6 +41,9 @@ const parseManifest = async (fileData, internalName) => {
     gameVersion: parsed.ApplicableVersion || 'any',
     dalamudVersion: String(parsed.DalamudApiLevel || '9'),
     changelog: parsed.Changelog || '',
+    manifestPunchline: parsed.Punchline || '',
+    manifestDescription: parsed.Description || '',
+    manifestDisplayName: parsed.Name || '',
   };
 };
 
@@ -62,10 +65,7 @@ const tryUploadFile = async (url, file, size) =>
     axios
       .put(url, file, {
         onUploadProgress: (e) => {
-          console.log(
-            'Upload progress:',
-            Math.round((e.loaded * 100) / (e.total ?? size)),
-          );
+          console.log('Upload progress:', Math.round((e.loaded * 100) / (e.total ?? size)));
         },
       })
       .then(() => {
@@ -99,14 +99,18 @@ const run = async () => {
   const fileData = await tryReadFileData(inputs.path);
 
   let versionNumber, gameVersion, dalamudVersion, changelog;
+  let manifestPunchline, manifestDescription, manifestDisplayName;
 
   if (inputs.versionNumber) {
     // Manual version provided - use manual inputs with defaults, skip manifest parsing
     console.log('Using manual inputs (manifest parsing skipped)');
     versionNumber = inputs.versionNumber;
     gameVersion = inputs.gameVersion || 'any';
-    dalamudVersion = inputs.dalamudVersion || '9';
+    dalamudVersion = inputs.dalamudVersion || '14';
     changelog = inputs.changelog || '';
+    manifestPunchline = manifest.manifestPunchline;
+    manifestDescription = manifest.manifestDescription;
+    manifestDisplayName = manifest.manifestDisplayName;
   } else {
     // No manual version - parse manifest
     console.log('Parsing manifest from zip');
@@ -117,6 +121,9 @@ const run = async () => {
     gameVersion = inputs.gameVersion || manifest.gameVersion;
     dalamudVersion = inputs.dalamudVersion || manifest.dalamudVersion;
     changelog = inputs.changelog !== null ? inputs.changelog : manifest.changelog;
+    manifestPunchline = manifest.manifestPunchline;
+    manifestDescription = manifest.manifestDescription;
+    manifestDisplayName = manifest.manifestDisplayName;
   }
 
   if (!versionNumber) {
@@ -125,8 +132,12 @@ const run = async () => {
 
   console.log(`Version: ${versionNumber} (${inputs.versionNumber ? 'manual' : 'from manifest'})`);
   console.log(`Game version: ${gameVersion} (${inputs.gameVersion ? 'manual' : 'from manifest'})`);
-  console.log(`Dalamud version: ${dalamudVersion} (${inputs.dalamudVersion ? 'manual' : 'from manifest'})`);
-  console.log(`Changelog: ${changelog ? 'provided' : 'empty'} (${inputs.changelog !== null ? 'manual' : 'from manifest'})`);
+  console.log(
+    `Dalamud version: ${dalamudVersion} (${inputs.dalamudVersion ? 'manual' : 'from manifest'})`,
+  );
+  console.log(
+    `Changelog: ${changelog ? 'provided' : 'empty'} (${inputs.changelog !== null ? 'manual' : 'from manifest'})`,
+  );
 
   const apiUrl = `https://puni.sh/api/plugins/download/${inputs.pluginId}/${inputs.internalName}/versions/${inputs.type}?versionNum=${versionNumber}&publisherKey=${process.env.PUBLISHER_KEY}`;
 
@@ -146,6 +157,9 @@ const run = async () => {
       gameVersion,
       dalamudVersion,
       changelog,
+      manifestPunchline,
+      manifestDescription,
+      manifestDisplayName,
     }),
   );
   console.log('Published new version with ID ', versionId);
